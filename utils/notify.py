@@ -1,5 +1,6 @@
 import os
 import smtplib
+import html
 from email.mime.text import MIMEText
 from typing import Literal
 
@@ -116,7 +117,10 @@ class NotificationKit:
 		if not self.telegram_bot_token or not self.telegram_chat_id:
 			raise ValueError('Telegram Bot Token or Chat ID not configured')
 
-		message = f'<b>{title}</b>\n\n{content}'
+		# Telegram 的 HTML parse_mode 需要对用户内容进行转义，避免出现 "<" 等字符导致消息发送失败
+		safe_title = html.escape(title)
+		safe_content = html.escape(content)
+		message = f'<b>{safe_title}</b>\n\n{safe_content}'
 		data = {'chat_id': self.telegram_chat_id, 'text': message, 'parse_mode': 'HTML'}
 		url = f'https://api.telegram.org/bot{self.telegram_bot_token}/sendMessage'
 		with httpx.Client(timeout=30.0) as client:
